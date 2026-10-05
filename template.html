@@ -1,0 +1,1417 @@
+<!DOCTYPE html>
+<html lang="hy">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Հարց ու պատասխան խաղ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Armenian:wght@400;500;600;700;800&family=Noto+Serif+Armenian:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #14121f;
+    --panel: #1e1b30;
+    --panel-2: #262242;
+    --gold: #e8b23d;
+    --gold-dim: #a3792a;
+    --teal: #4fd1c5;
+    --ink: #f2efea;
+    --muted: #9b96b3;
+    --used: #2a2740;
+  }
+  *{ box-sizing:border-box; }
+  html,body{
+    margin:0; padding:0;
+    background: radial-gradient(circle at 20% -10%, #241f3d 0%, var(--bg) 55%);
+    color: var(--ink);
+    font-family: "Noto Sans Armenian", sans-serif;
+    min-height:100vh;
+  }
+  body.phase1-mode {
+    overflow: hidden;
+  }
+  #phase1Section {
+    height: 100vh;
+    height: 100dvh;
+    display: none;
+    flex-direction: column;
+    padding: 16px 24px 14px;
+  }
+  #phase1Section.stage-section.visible {
+    display: flex;
+    animation: none;
+  }
+  #phase1Section header {
+    flex: 0 0 auto;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+  }
+  #phase1Section header h1 {
+    font-size: clamp(22px, 3vw, 34px);
+  }
+  #phase1Section header p {
+    font-size: 13px;
+  }
+  #phase1Section .board {
+    flex: 1 1 0;
+    min-height: 0;
+    gap: 5px;
+  }
+  #phase1Section .row {
+    flex: 1 1 0;
+    min-height: 0;
+    grid-template-columns: 180px repeat(7, minmax(0, 1fr));
+    gap: 6px;
+  }
+  #phase1Section .topic {
+    min-height: 0;
+    padding: 0 10px;
+    font-size: 13px;
+  }
+  #phase1Section .point-btn {
+    min-height: 0;
+    padding: 0;
+    font-size: clamp(13px, 1.6vw, 18px);
+  }
+  #phase1Section #continueToPhase2 {
+    flex: 0 0 auto;
+    margin-top: 10px;
+    padding: 9px 24px;
+    font-size: 14px;
+  }
+  .wrap{
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 40px 24px 64px;
+  }
+  header{
+    text-align:left;
+    margin-bottom: 36px;
+    border-bottom: 1px solid #332f52;
+    padding-bottom: 20px;
+  }
+  header h1{
+    font-family: "Noto Serif Armenian", serif;
+    font-weight: 700;
+    font-size: clamp(28px, 4vw, 40px);
+    margin: 0 0 6px;
+    color: var(--gold);
+  }
+  header p{
+    margin:0;
+    color: var(--muted);
+    font-size: 15px;
+  }
+  .board{
+    display:flex;
+    flex-direction:column;
+    gap: 10px;
+  }
+  .row{
+    display:grid;
+    grid-template-columns: 200px repeat(7, 1fr);
+    gap: 10px;
+    align-items:stretch;
+  }
+  .topic{
+    display:flex;
+    align-items:center;
+    background: var(--panel);
+    border: 1px solid #332f52;
+    border-radius: 10px;
+    padding: 0 16px;
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--ink);
+    line-height: 1.3;
+  }
+  .point-btn{
+    background: var(--panel-2);
+    border: 1px solid #3a355c;
+    border-radius: 10px;
+    color: var(--gold);
+    font-family: "Noto Serif Armenian", serif;
+    font-weight: 700;
+    font-size: 20px;
+    padding: 18px 0;
+    cursor: pointer;
+    transition: transform .12s ease, background .12s ease, border-color .12s ease;
+  }
+  .point-btn:hover{
+    background: #322c56;
+    border-color: var(--gold-dim);
+    transform: translateY(-2px);
+  }
+  .point-btn:disabled{
+    background: var(--used);
+    border-color: #2a2740;
+    color: #55506f;
+    cursor: default;
+    transform:none;
+  }
+
+  .phase2-wrap{
+    border-top: 1px solid #332f52;
+    padding-top: 40px;
+  }
+  .stage-section{
+    display: none;
+  }
+  .stage-section.visible{
+    display: block;
+    animation: fadeIn .5s ease;
+  }
+  @keyframes fadeIn{
+    from{ opacity: 0; transform: translateY(12px); }
+    to{ opacity: 1; transform: translateY(0); }
+  }
+  .continue-btn{
+    display:block;
+    margin: 32px auto 0;
+    background: var(--gold);
+    color: #241a08;
+    border: none;
+    border-radius: 10px;
+    padding: 14px 32px;
+    font-family: "Noto Sans Armenian", sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    cursor: pointer;
+    transition: transform .12s ease, background .12s ease;
+  }
+  .continue-btn:hover{
+    background: #f2c25c;
+    transform: translateY(-2px);
+  }
+  .nav-row{
+    display:flex;
+    justify-content:center;
+    gap: 14px;
+    flex-wrap:wrap;
+  }
+  .nav-row .continue-btn{
+    margin-left:0;
+    margin-right:0;
+  }
+  .back-btn{
+    background: var(--panel-2);
+    color: var(--ink);
+    border: 1px solid #3a355c;
+  }
+  .back-btn:hover{
+    background: #322c56;
+    border-color: var(--gold-dim);
+  }
+  .phase2-board{
+    display:grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+  #phase2Board > .phase2-btn:nth-child(5),
+  #phase4Board > .phase2-btn:nth-child(5),
+  #phase3Board > .phase2-btn:nth-child(5){
+    grid-column: 1 / -1;
+    justify-self: center;
+    width: calc((100% - 16px) / 2);
+  }
+  .phase2-btn{
+    background: var(--panel);
+    border: 1px solid #332f52;
+    border-radius: 14px;
+    padding: 34px 20px;
+    text-align:center;
+    cursor: pointer;
+    font-family: "Noto Serif Armenian", serif;
+    font-weight: 700;
+    font-size: 22px;
+    color: var(--ink);
+    transition: transform .12s ease, background .12s ease, border-color .12s ease;
+  }
+  .phase2-btn .progress{
+    display:block;
+    margin-top: 10px;
+    font-family: "Noto Sans Armenian", sans-serif;
+    font-weight: 500;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .phase2-btn:hover{
+    background: #322c56;
+    border-color: var(--gold-dim);
+    transform: translateY(-2px);
+  }
+  .phase2-btn.done{
+    background: var(--used);
+    border-color: #2a2740;
+    color: #55506f;
+    cursor: default;
+    transform:none;
+  }
+  .phase2-btn.done .progress{ color: #4a4666; }
+
+  @media (max-width: 720px){
+    .phase2-board{ grid-template-columns: 1fr; }
+    #phase2Board > .phase2-btn:nth-child(5),
+    #phase4Board > .phase2-btn:nth-child(5),
+    #phase3Board > .phase2-btn:nth-child(5){
+      grid-column: auto;
+      width: auto;
+    }
+  }
+
+  /* Overlay */
+  .overlay{
+    position: fixed;
+    inset: 0;
+    background: rgba(10,9,18,.92);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding: 32px;
+    cursor: pointer;
+    z-index: 50;
+  }
+  .overlay.show{ display:flex; }
+  .card{
+    max-width: 780px;
+    width:100%;
+    text-align:center;
+    cursor: default;
+  }
+  .card .label{
+    font-size: 14px;
+    letter-spacing: .04em;
+    color: var(--muted);
+    margin-bottom: 18px;
+  }
+  .card .points-tag{
+    display:inline-block;
+    color: var(--gold);
+    font-family: "Noto Serif Armenian", serif;
+    font-weight: 700;
+    font-size: 18px;
+    margin-bottom: 18px;
+    border: 1px solid var(--gold-dim);
+    border-radius: 999px;
+    padding: 4px 16px;
+  }
+  .card-img{
+    display:block;
+    max-width: 100%;
+    max-height: 46vh;
+    border-radius: 12px;
+    margin: 0 auto 22px;
+    box-shadow: 0 12px 30px rgba(0,0,0,.5);
+  }
+  .card-video{
+    display:block;
+    max-width: 100%;
+    max-height: 50vh;
+    border-radius: 12px;
+    margin: 0 auto 22px;
+    box-shadow: 0 12px 30px rgba(0,0,0,.5);
+  }
+  .card-audio{
+    display:block;
+    width: 100%;
+    max-width: 460px;
+    margin: 10px auto 26px;
+  }
+  .audio-play-btn{
+    display:block;
+    margin: 0 auto 10px;
+    padding: 10px 20px;
+    border: 0;
+    border-radius: 8px;
+    background: var(--teal);
+    color: #0e2523;
+    font: 700 15px "Noto Sans Armenian", sans-serif;
+    cursor: pointer;
+  }
+  .card .text{
+    font-family: "Noto Serif Armenian", serif;
+    font-size: clamp(24px, 4vw, 36px);
+    font-weight: 600;
+    line-height: 1.4;
+    white-space: pre-line;
+    margin-bottom: 26px;
+  }
+  .card .text.answer{ color: var(--teal); }
+  .card .hint{
+    color: var(--muted);
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .card .close-btn{
+    margin-top: 10px;
+    background: var(--teal);
+    color: #0e2523;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 26px;
+    font-family: "Noto Sans Armenian", sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    cursor: pointer;
+  }
+
+  @media (max-width: 720px){
+    .row{ grid-template-columns: 120px repeat(7, 1fr); }
+    .topic{ font-size: 12px; padding: 0 8px; }
+    .point-btn{ font-size: 15px; padding: 12px 0; }
+  }
+  @media (max-width: 720px){
+    #phase1Section {
+      padding: 10px 10px 8px;
+    }
+    #phase1Section header {
+      margin-bottom: 7px;
+      padding-bottom: 7px;
+    }
+    #phase1Section header h1 {
+      font-size: clamp(20px, 5vw, 28px);
+    }
+    #phase1Section header p {
+      font-size: 12px;
+    }
+    #phase1Section .board {
+      gap: 3px;
+    }
+    #phase1Section .row {
+      grid-template-columns: 94px repeat(7, minmax(0, 1fr));
+      gap: 3px;
+    }
+    #phase1Section .topic {
+      padding: 0 5px;
+      font-size: 10px;
+      overflow-wrap: anywhere;
+    }
+    #phase1Section .point-btn {
+      font-size: clamp(10px, 3vw, 14px);
+    }
+    #phase1Section #continueToPhase2 {
+      margin-top: 7px;
+      padding: 8px 16px;
+      font-size: 12px;
+    }
+  }
+  @media (max-height: 600px){
+    #phase1Section {
+      padding-top: 6px;
+      padding-bottom: 6px;
+    }
+    #phase1Section header {
+      margin-bottom: 5px;
+      padding-bottom: 5px;
+    }
+    #phase1Section header h1 {
+      font-size: clamp(18px, 3vh, 26px);
+      margin-bottom: 2px;
+    }
+    #phase1Section header p {
+      font-size: 11px;
+    }
+    #phase1Section .board {
+      gap: 2px;
+    }
+    #phase1Section .row {
+      gap: 3px;
+    }
+    #phase1Section #continueToPhase2 {
+      margin-top: 5px;
+      padding: 6px 16px;
+      font-size: 12px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap stage-section visible" id="phase1Section">
+  <header>
+    <h1 id="gameTitle">Գիտելիքների Մենամարտ</h1>
+    <p>Ընտրեք թեմա և միավորը</p>
+  </header>
+  <div class="board" id="board"></div>
+  <button class="continue-btn" id="continueToPhase2">Անցնել Փուլ 2 →</button>
+</div>
+
+<div class="wrap phase2-wrap stage-section" id="phase2Section">
+  <header>
+    <h1 id="phase2Title">Փուլ 2</h1>
+    <p>Ընտրեք թեման</p>
+  </header>
+  <div class="phase2-board" id="phase2Board"></div>
+  <div class="nav-row">
+    <button class="continue-btn back-btn" id="backToPhase1">← Վերադառնալ Փուլ 1</button>
+    <button class="continue-btn" id="continueToPhase3">Անցնել Փուլ 3 →</button>
+  </div>
+</div>
+
+<div class="wrap phase2-wrap stage-section" id="phase4Section">
+  <header>
+    <h1 id="phase4Title">Փուլ 3</h1>
+    <p>2 հայտնի թեմա և 3 ծածկված թեմա</p>
+  </header>
+  <div class="phase2-board" id="phase4Board"></div>
+  <div class="nav-row">
+    <button class="continue-btn back-btn" id="backToPhase2">← Վերադառնալ Փուլ 2</button>
+    <button class="continue-btn" id="continueToPhase4">Անցնել Փուլ 4 →</button>
+  </div>
+</div>
+
+<div class="wrap phase2-wrap stage-section" id="phase3Section">
+  <header>
+    <h1 id="phase3Title">Փուլ 4</h1>
+    <p>Թեման գաղտնի է. այն կպարզվի միայն ընտրելուց հետո</p>
+  </header>
+  <div class="phase2-board" id="phase3Board"></div>
+  <div class="nav-row">
+    <button class="continue-btn back-btn" id="backToPhase3">← Վերադառնալ Փուլ 3</button>
+  </div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="card" id="card">
+    <div class="points-tag" id="pointsTag"></div>
+    <div class="label" id="stageLabel">ՀԱՐՑ</div>
+    <img class="card-img" id="cardImg" style="display:none;" alt="" decoding="async">
+    <video class="card-video" id="cardVideo" style="display:none;" controls preload="none"></video>
+    <audio class="card-audio" id="cardAudio" style="display:none;" controls preload="none"></audio>
+    <div class="text" id="cardText"></div>
+    <div class="hint" id="hint">Սեղմեք էկրանին՝ պատասխանը տեսնելու համար</div>
+    <button class="close-btn" id="closeBtn" style="display:none;">Փակել և վերադառնալ</button>
+  </div>
+</div>
+
+<div class="overlay" id="overlay2">
+  <div class="card" id="card2">
+    <div class="points-tag" id="phase2Tag"></div>
+    <div class="label" id="phase2StageLabel">ՀԱՐՑ</div>
+    <img class="card-img" id="phase2Img" style="display:none;" alt="" decoding="async">
+    <video class="card-video" id="phase2Video" style="display:none;" controls preload="none"></video>
+    <button class="audio-play-btn" id="phase2PlayBtn" type="button" style="display:none;">▶ Նվագարկել</button>
+    <audio class="card-audio" id="phase2Audio" style="display:none;" controls preload="none"></audio>
+    <div class="text" id="phase2Text"></div>
+    <div class="hint" id="phase2Hint">Սեղմեք էկրանին՝ պատասխանը տեսնելու համար</div>
+    <button class="close-btn" id="phase2CloseBtn" style="display:none;">Հաջորդ հարց</button>
+  </div>
+</div>
+
+<div class="overlay" id="overlay4">
+  <div class="card" id="card4">
+    <div class="points-tag" id="phase4Tag"></div>
+    <div class="label" id="phase4StageLabel">ՀԱՐՑ</div>
+    <img class="card-img" id="phase4Img" style="display:none;" alt="" decoding="async">
+    <div class="text" id="phase4Text"></div>
+    <div class="hint" id="phase4Hint">Սեղմեք էկրանին՝ պատասխանը տեսնելու համար</div>
+    <button class="close-btn" id="phase4CloseBtn" style="display:none;">Հաջորդ հարց</button>
+  </div>
+</div>
+
+<div class="overlay" id="overlay3">
+  <div class="card" id="card3">
+    <div class="points-tag" id="phase3Tag"></div>
+    <div class="label" id="phase3StageLabel">ՀԱՐՑ</div>
+    <img class="card-img" id="phase3Img" style="display:none;" alt="" decoding="async">
+    <div class="text" id="phase3Text"></div>
+    <div class="hint" id="phase3Hint">Սեղմեք էկրանին՝ պատասխանը տեսնելու համար</div>
+    <button class="close-btn" id="phase3CloseBtn" style="display:none;">Հաջորդ հարց</button>
+  </div>
+</div>
+
+<script>
+  // First phase
+const RAW_GAME_DATA = [
+  {topic: "Ծեսեր",
+    questions: {
+      100: { question: "Ո՞ր երկրում է անցկացվում հետևյալ ծեսը:", answer: "Հնդկաստան",image:"religion/holy.webp"},
+      200: { question: "Ինչպե՞ս է կոչվում նկարում պատկերված ծեսը։", answer: "Լա Տոմատինա",image:"religion/latomatina.jpg" },
+      300: { question: "3)	Հայկական ո՞ր ավանդական ծեսի ժամանակ են մասնակիցները (հատկապես նորապսակները) ցատկում կրակի վրայով՝ չարը խափանելու և օրհնություն ստանալու նպատակով։", answer: "Տրնդեզ (Տյառնընդառաջ)" },
+      400: { question: "4)	Ինչպե՞ս է կոչվում Մեքսիկայում նշվող տոնը, որի ընթացքում մարդիկ հիշում են մահացած հարազատներին, զարդարում զոհասեղանները, օգտագործում ծաղիկներ, մոմեր և շաքարե գանգեր։", answer: "Մեռյալների օր" },
+      500: { question: "5)	Ինդոնեզիայի Սուլավեսի կղզում ապրող Տորաջա (Toraja) ժողովրդի մոտ գոյություն ունեցող ծեսերից մեկի ժամանակ հանգուցյալների մարմինները հանում են դամբարաններից, մաքրում, հագցնում նոր հագուստ ևլուսանկարվում նրանց հետ։ Ինչպե՞ս է կոչվում այդ ծեսը։", answer: "՝ Մանենե (Ma’nene)." },
+      600: { question: "6)	Տիբեթում գոյություն ունեցող հուղարկավորության ո՞ր ավանդական ծեսի դեպքում են մահացածի մարմինը տանում լեռան գագաթ և թողնում գիշատիչ թռչուններին (անգղներին), որն արտացոլում է բուդդայականության՝ մարմնի ժամանակավոր լինելու փիլիսոփայությունը։", answer: "Երկնային հուղարկավորություն" },
+      700: { question: "7)	Ինչպե՞ս է կոչվում սլավոնական ժողովրդական տոնը, որը նշվում է հուլիսի 7-ի գիշերը և կապված է խարույկների, կրակի վրայով թռչելու, ծաղկեպսակների և պտերաբույսի ծաղիկը փնտրելու ավանդույթի հետ։", answer: "Իվան Կուպալա" },
+    }
+  },
+  { topic: "Խոհանոցներ",
+    questions: {
+      100: { question: "Ո՞ր հայտնի իտալական ուտեստի անվանումն է բառացիորեն կապված «փոքրիկ կարկանդակ» իմաստի հետ։", answer: "Պիցցա" },
+      200: { question: "Ո՞ր երկրի խոհանոցում է «բեշբարմակը» հանդիսանում ավանդական մսային ուտեստ։", answer: "Ղազախստան" },
+      300: { question: "Ո՞ր երկրում է ծագել «Tom Yum»-ը՝ կծու և թթու համերի համադրությամբ հայտնի ապուրը, որի անվանումը թայլանդերենում կապված է եփելու և խառնելու գաղափարի հետ", answer: "Թաիլանդ" },
+      400: { question: "Որ համեմունքն է համարվում «ոսկե համեմունք»:", answer: "Քրքում" },
+      500: { question: "Ո՞ր պանրի պատրաստման գործընթացում են պանրի զանգվածը ձգում տաք ջրի մեջ, ինչի շնորհիվ այն ստանում է առաձգական կառուցվածք։ ", answer: "Մոցարելլա" },
+      600: { question: "Նկարում պատկերված ուտեստը ո՞ր երկրի խոհանոցի հետ է առավել հաճախ կապվում։", answer: "Պակիստան", image: "kitchen/pakistan.webp",  },
+      700: { question: "Այս ֆրանսիական աղանդերը պատրաստվում է նուշի ալյուրից և ձվի սպիտակուցից: Այն կազմված է երկու թխվածքաբլիթներից, որոնք միացված են կրեմով կամ ջեմով: Ո՞րն է այս աղանդերի ճիշտ անվանումը:", answer: "Մակարոն" }
+    }
+  },
+  { topic: "Մուլտֆիլմեր",
+    questions: {
+      100: { question: "«The Lion King» մուլտֆիլմում ի՞նչ է գլխավոր առյուծի ձագի անունը:", answer: "Սիմբա" },
+      200: { question: "«Ալադին» մուլտֆիլմում Ո՞րն է Ալադին վերջին ցանկությունը:", answer: "Լինի ազատումը" },
+      300: { question: "Նշեք հետևյալ մուլտհերոսի անունը:", answer: "Կառլսոն",image:"cartoon/karlson.webp" },
+      400: { question: "«Toy Story» մուլտֆիլմում ի՞նչ էր գրված Հուդի կոշիկների ներքևում:", answer: "Andy" },
+      500: { question: "Frozen»մուլտֆիլմում ինչպե՞ս է կոչվում Էլզայի սառցե պալատի կառուցման երգը:", answer: "Let it go" },
+      600: { question: "Նշեք հետևյալ մուլտֆիլմ անվանումը:", answer: "Հեյ Առնոլդ", image: "cartoon/arnold.webp",  },
+      700: { question: "Ո՞ր ճապոնական անիմացիոն ֆիլմում է գլխավոր հերոսուհին հայտնվում հոգիներով բնակեցված աշխարհում:", answer: "Spirited Away" }
+    }
+  },
+  {topic: "Գինեսի Ռեկորդներ",
+    questions: {
+      100: { question: "Ո՞վ է ամենաարագախազ մարդը ըստ Գինեսի ռեկորդների գրքի:", answer: "Հուսեին Բոլտ (37,6 կմ/ժ)" },
+      200: { question: "Ո՞րն է ամենաբարձր երկնաքերը ըստ Գինեսի ռեկորդների գրքի:", answer: "Բուրջ Խալիֆա (828 մ)" },
+      300: { question: "Ըստ Գինեսի գրքի՝ ինչքա՞ն երկար է Ռենդի Գարդները կարողացել արթուն մնալ:", answer: "11 օր (ավելի կոնկրետ 11 օր և 25 րոպե)" },
+      400: { question: "Գինեսի ռեկորդների գրքի համաձայն՝ ո՞րն է պատմության մեջ ամենաշատ թարգմանված առանձին գիրքը (չհաշված կրոնական տեքստերը, ինչպիսիք են Աստվածաշունչը կամ Ղուրանը):", answer: "Փոքրիկ իշխանը" },
+      500: { question: "Ո՞վ է մեկ Օլիմպիական խաղերում և ընդհանուր առմամբ ամենաշատ օլիմպիական ոսկե մեդալներ նվաճած մարզիկը:", answer: "Մայքլ Ֆելփս" },
+      600: { question: "Որքան երկար է Բուդիմիր Շոբաթը կարողացել պահել իր շունչը ջրի տակ,սահմանեով ռեկորդ:", answer: "24 րոպե (ավելի կոնկրետ 24 րոպե 37,36 վայրկյան)" },
+      700: { question: "Քանի՞ ժամ և րոպե է տևել աշխարհի ամենաերկար ձեռքսեղմումը:", answer: "42 ժամ 35 րոպե։" }
+    }
+  },
+  {topic: "Օպերաների շենքեր",
+    questions: {
+      100: { question: "Ո՞ր քաղաքի օպերայի շենքն է պատկերված նկարում:", answer: "Սիդնեյ", image:"opera/sidney.webp" },
+      200: { question: "Ո՞ր քաղաքի օպերայի շենքն է պատկերված նկարում:", answer: "Վիեննա", image:"opera/vienna.webp" },
+      300: { question: "Ո՞ր քաղաքի օպերայի շենքն է պատկերված նկարում:", answer: "Դուբայ",image:"opera/dubai.webp" },
+      400: { question: "Ո՞ր քաղաքի օպերայի շենքն է պատկերված նկարում:", answer: "Արգենտինա",image:"opera/argentina.webp" },
+      500: { question: "Ո՞ր քաղաքի օպերայի շենքն է պատկերված նկարում:", answer: "Բուդապեշտ", image:"opera/budapesht.webp" },
+      600: { question: "Այս օպերային թատրոնը բացվել է 1778 թվականին և համարվում է աշխարհի ամենահայտնի օպերային բեմերից մեկը։ Ո՞ր իտալական քաղաքում է գտնվում «Teatro alla Scala»-ն։", answer: "Միլան" },
+      700: { question: "Նկարում պատկերված շքեղ օպերային շենքը կառուցվել է Նապոլեոն III-ի օրոք և հանդիսանում է «Օպերայի ուրվականը» հայտնի վեպի գործողությունների վայրը։Ո՞ր օպերային թատրոնի մասին է խոսքը։ ", answer: "Գարնիե պալատ / Փարիզի օպերա",image:"opera/paris.webp" }
+    }
+  },
+  {topic: " Տարեթվեր",
+    questions: {
+      100: { question: "Ի՞նչ իրադարձություն է թաքնված այս նկարում:", answer: " ԱՄՆ 35-րդ նախագահ Ջոն Քենեդու սպանությունը", image: "dates/1963.webp" },
+      200: { question: "Ի՞նչ իրադարձություն է թաքնված այս նկարում:", answer: "Չեռնոբիլի ատոմակայանի վթարը",image: "dates/1986.webp" },
+      300: { question: "Ի՞նչ իրադարձություն է թաքնված այս նկարում:", answer: "Նիլ Արմսթրոնգի թռիչքը դեպի Լուսին", image: "dates/1969.webp" },
+      400: { question: "Ի՞նչ իրադարձություն է թաքնված այս նկարում:", answer: "Սառը պատերազմի սկիզբը", image: "dates/1947.webp"},
+      500: { question: "Ի՞նչ իրադարձություն է թաքնված այս նկարում:", answer: "Ռուսաստանի կողմից Ալյասկան ԱՄՆ-ին վաճառելը։",image: "dates/1867.webp" },
+      600: { question: "Ի՞նչ իրադարձություն է թաքնված այս նկարում:", answer: "«Սուպեր մամա» ֆիլմի առաջին ցուցադրությունը:",image: "dates/2014.webp"},
+      700: { question: "Ի՞նչ իրադարձություն է թաքնված այս նկարում:", answer: "Skype-ի աշխատանքների դադարեցումը",image: "dates/2025.webp" }
+    }
+  },
+  {topic: "Տիեզերք",
+    questions: {
+      100: { question: "Ո՞ր մոլորակն է Արեգակնային համակարգի ամենամեծ մոլորակը։", answer: "Յուպիտեր"},
+      200: { question: "Արեգակնային համակարգի ո՞ր մոլորակն է ամենատաքը։", answer: "Վեներան (խիտ մթնոլորտի և ուժեղ ջերմոցային էֆեկտի պատճառով ջերմաստիճանը հասնում է մոտ 465°C)" },
+      300: { question: "Ինչպե՞ս է կոչվում Արեգակնային համակարգի ամենամեծ արբանյակը։", answer: "Գանիմեդ"},
+      400: { question: "Ո՞րն է Արեգակնային համակարգի ամենաբարձր հայտնի լեռը (հրաբուխը)։", answer: "Օլիմպոս (Olympus Mons, բարձրությունը՝ մոտ 22 կմ)"},
+      500: { question: "Մարդկության կողմից ստեղծված ո՞ր տիեզերական ապարատն է ներկայումս գտնվում Երկրից ամենահեռու տարածության վրա (դուրս է եկել Արեգակնային համակարգի սահմաններից)։", answer: "Վոյաջեր-1 (Voyager 1)" },
+      600: { question: "Ո՞րն է տիեզերքում հայտնաբերված ամենացուրտ բնական օբյեկտը/վայրը, որտեղ ջերմաստիճանը հասնում է -272°C-ի (ընդամենը 1 աստիճան բացարձակ զրոյից բարձր)։", answer: "Բումերանգ» միգամածությունը (Boomerang Nebula)"},
+      700: { question: "Ո՞ր տիեզերանավն է 1970 թվականին առաջինը հաջողությամբ փափուկ վայրէջք կատարել մեկ այլ մոլորակի վրա և այնտեղից տվյալներ փոխանցել Երկիր։", answer: " «Վեներա-7»", }
+    }
+  },
+  {topic: "Օդանավակայաններ",
+    questions: {
+      100: { question: "Ո՞րն է Հայաստանի Հանրապետության ամենամեծ և գլխավոր միջազգային օդանավակայանը։", answer: "«Զվարթնոց» միջազգային օդանավակայանը"},
+      200: { question: "Ո՞ր քաղաքում է գտնվում աշխարհի ամենազբաղված օդանավակայանը՝ ըստ ուղևորահոսքի։", answer: "Ատլանտա (ԱՄՆ, Ջորջիա նահանգ)" },
+      300: { question: "Ո՞ր քաղաքում է գտնվում այն օդանավակայանը, որը կրում է ԱՄՆ 35-րդ նախագահի անունը, իսկ դրա երեք տառանոց IATA կոդն է “JFK”:", answer: "Նյու Յորք (Ջոն Ֆ. Քենեդու անվան միջազգային օդանավակայան)"},
+      400: { question: "Ո՞ր օդանավակայանն է համարվում աշխարհում ամենաբարձրադիրը (ծովի մակարդակից 4,411 մետր բարձրության վրա)։", answer: "Դաոչեն Յադին օդանավակայանը (Daocheng Yading Airport), Չինաստան (Սըչուան նահանգ)։"},
+      500: { question: "Ո՞րն է աշխարհում ամենամեծ տարածքն ունեցող օդանավակայանը (զբաղեցնում է մոտ 780 կմ² տարածք)։", answer: "Ֆահդ թագավորի անվան միջազգային օդանավակայանը (King Fahd International Airport), Սաուդյան Արաբիա (Դամամ)։" },
+      600: { question: "Հիմալայներում գտնվող ո՞ր օդանավակայանն է համարվում աշխարհում ամենավտանգավորներից մեկը կարճ թռիչքուղու (մոտ 527 մ) և լեռնային բարդ տեղանքի պատճառով, որտեղից սկսվում է վերելքը դեպի Էվերեստ։", answer: "Տենցինգ-Հիլարի օդանավակայանը (հայտնի է նաև որպես Լուկլա օդանավակայան), Նեպալ"},
+      700: { question: "Ո՞ր երկրում է գտնվում աշխարհի ամենահյուսիսային միջազգային օդանավակայանը։", answer: "Նորվեգիայում", }
+    }
+  },
+  {topic: "Լոգոներ",
+    questions: {
+      100: { question: "Ո՞ր երկրի ծագում ունի հետևյալ լոգոն։", answer: "Գերմանիա", image: "logo/adidas.webp" },
+      200: { question: "Ո՞ր երկրի ավտոմոբիլային բրենդն է Ferrari-ն։", answer: "Իտալիա" },
+      300: { question: "FedEx-ի լոգոյի մեջ կա թաքնված խորհրդանիշ։ Ի՞նչ է այն։", answer: "Սլաք", image: "logo/fedex.webp" },
+      400: { question: "Ո՞ր ընկերությանն է հղում “Shrek” մուլտֆիլմի հերոս Lord Farquaad-ի գերբը", answer: "Facebook", image: "logo/shrek.webp"},
+      500: { question: "Chupa Chups հրուշակեղենի հայտնի ծովացլիկ-կոնֆետների լոգոն՝ վառ դեղին ծաղկի տեսքով, ստեղծվել է 1969 թվականին: Ո՞ր աշխարհահռչակ իսպանացի սյուրրեալիստ նկարիչն է այն նկարել ընկերության հիմնադրի խնդրանքով՝ ընդամենը թեյի սեղանի շուրջ թղթի վրա:", answer: "Սալվադոր Դալի։" },
+      600: { question: "Ո՞ր ընկերության լոգոտիպում է պատկերված ամրոց, որի վրայով անցնող աստղի հետքը ձևավորում է կամար", answer: "Disney"},
+      700: { question: "McDonald’s-ի լոգոյի ոսկեգույն «M»-ը սովորաբար ինչպե՞ս է կոչվում։", answer: "Ոսկեգույն կամարներ։", }
+    }
+  },
+  {topic: "Ֆորմուլա/ավտոմեքենաներ",
+    questions: {
+      100: { question: "Ո՞ր վարորդն է դարձել Ֆորմուլա 1-ի աշխարհի չեմպիոն երիտասարդ տարիքում։", answer: "Ֆետել" },
+      200: { question: "Ո՞ր գերմանական ապրանքանիշի խորհրդանիշն է եռաթև աստղը։", answer: "Mercedes-Benz" },
+      300: { question: "Ո՞ր մեքենան է հայտնի «Godzilla» մականունով։", answer: "Nissan" },
+      400: { question: "Ո՞ր թվականին Mercedes-ը վերադարձավ Formula 1․ որպես գործարանային թիմ՝ երկար ընդմիջումից հետո։", answer: "2010"},
+      500: { question: "Ո՞ր Formula 1-ի վարորդն է միակն, ով հաղթել է աշխարհիառաջնությունը և՛ Ferrari-ի, և՛ McLaren-ի կազմում։", answer: "Ալեն Պրոստ" },
+      600: { question: "Որտե՞ղ է գտնվում Formula 1-ի միակ մրցուղին, որը կառուցված է ամբողջությամբ կղզու վրա։", answer: "Մարինա Բեյ փողոցային մրցուղին՝ Սինգապուրում"},
+      700: { question: "Ո՞ր ավտոմեքենան է առաջինը ստացել զանգվածային արտադրության LED լուսարձակներ։", answer: "Lexus LS 600h (2007)", }
+    }
+  }
+  
+];
+
+const GAME_DATA = RAW_GAME_DATA;
+
+const GAME_TITLE = "Գիտելիքների Մենամարտ";
+
+const POINT_VALUES = [100, 200, 300, 400, 500, 600, 700];
+
+document.getElementById("gameTitle").textContent = GAME_TITLE;
+setPhaseMode("phase1Section");
+
+const board = document.getElementById("board");
+const overlay = document.getElementById("overlay");
+const card = document.getElementById("card");
+const cardText = document.getElementById("cardText");
+const pointsTag = document.getElementById("pointsTag");
+const stageLabel = document.getElementById("stageLabel");
+const hint = document.getElementById("hint");
+const closeBtn = document.getElementById("closeBtn");
+
+let currentBtn = null;
+let currentItem = null;
+let showingAnswer = false;
+
+const MEDIA_VOLUME_BOOST = 10;
+const audioContextCache = new WeakMap();
+
+function boostMediaVolume(element){
+  if (!element) return;
+
+  element.muted = false;
+  const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextCtor) {
+    element.volume = Math.min(1, (element.volume || 1) * MEDIA_VOLUME_BOOST);
+    return;
+  }
+
+  let ctx = audioContextCache.get(element);
+  if (!ctx){
+    ctx = new AudioContextCtor();
+    const source = ctx.createMediaElementSource(element);
+    const gainNode = ctx.createGain();
+    gainNode.gain.value = MEDIA_VOLUME_BOOST;
+    source.connect(gainNode);
+    gainNode.connect(ctx.destination);
+    audioContextCache.set(element, ctx);
+  }
+
+  if (ctx.state === "suspended") {
+    ctx.resume();
+  }
+}
+
+function setQuestionImage(imageElement, source){
+  if (source){
+    imageElement.src = source;
+    imageElement.style.display = "block";
+  } else {
+    imageElement.removeAttribute("src");
+    imageElement.style.display = "none";
+  }
+}
+
+GAME_DATA.forEach((topicData) => {
+  const row = document.createElement("div");
+  row.className = "row";
+
+  const topicEl = document.createElement("div");
+  topicEl.className = "topic";
+  topicEl.textContent = topicData.topic;
+  row.appendChild(topicEl);
+
+  POINT_VALUES.forEach((pts) => {
+    const btn = document.createElement("button");
+    btn.className = "point-btn";
+    btn.textContent = pts;
+    btn.addEventListener("click", () => openQuestion(topicData, pts, btn));
+    row.appendChild(btn);
+  });
+
+  board.appendChild(row);
+});
+
+function openQuestion(topicData, pts, btn){
+  currentItem = topicData.questions[pts];
+  currentBtn = btn;
+  showingAnswer = false;
+
+  pointsTag.textContent = topicData.topic + " · " + pts;
+  stageLabel.textContent = "ՀԱՐՑ";
+  cardText.classList.remove("answer");
+  hint.style.display = "block";
+  closeBtn.style.display = "none";
+
+  const cardImg = document.getElementById("cardImg");
+  const cardVideo = document.getElementById("cardVideo");
+  const cardAudio = document.getElementById("cardAudio");
+  const hasImage = currentItem && currentItem.image;
+  const hasVideo = currentItem && currentItem.video;
+  const hasAudio = currentItem && currentItem.audio;
+
+  cardImg.style.display = "none";
+  cardImg.src = "";
+  cardVideo.pause();
+  cardVideo.style.display = "none";
+  cardVideo.removeAttribute("src");
+  cardVideo.load();
+  cardAudio.pause();
+  cardAudio.style.display = "none";
+  cardAudio.removeAttribute("src");
+  cardAudio.load();
+
+  if (hasVideo){
+    cardVideo.src = currentItem.video;
+    cardVideo.style.display = "block";
+    cardText.style.display = "block";
+    cardText.textContent = currentItem ? currentItem.question : "(հարցը լրացված չէ)";
+    boostMediaVolume(cardVideo);
+  } else if (hasAudio){
+    cardAudio.src = currentItem.audio;
+    cardAudio.load();
+    cardAudio.style.display = "block";
+    cardText.style.display = "block";
+    cardText.textContent = currentItem ? currentItem.question : "(հարցը լրացված չէ)";
+  } else if (hasImage){
+    cardImg.src = currentItem.image;
+    cardImg.style.display = "block";
+    cardText.style.display = "block";
+    cardText.textContent = currentItem ? currentItem.question : "(հարցը լրացված չէ)";
+  } else {
+    cardText.style.display = "block";
+    cardText.textContent = currentItem ? currentItem.question : "(հարցը լրացված չէ)";
+  }
+
+  overlay.classList.add("show");
+}
+
+function revealAnswer(){
+  showingAnswer = true;
+  stageLabel.textContent = "ՊԱՏԱՍԽԱՆ";
+  document.getElementById("cardVideo").pause();
+  const cardAudio = document.getElementById("cardAudio");
+  cardAudio.pause();
+  const cardImg = document.getElementById("cardImg");
+  if (currentItem && currentItem.answerImage){
+    cardImg.src = currentItem.answerImage;
+    cardImg.style.display = "block";
+  }
+  if (currentItem && currentItem.answerAudio){
+    cardAudio.src = currentItem.answerAudio;
+    cardAudio.load();
+    cardAudio.style.display = "block";
+    cardText.style.display = "block";
+    cardText.textContent = currentItem.answer;
+  } else {
+    cardAudio.style.display = "none";
+    cardAudio.removeAttribute("src");
+    cardAudio.load();
+    cardText.style.display = "block";
+    cardText.textContent = currentItem ? currentItem.answer : "(պատասխանը լրացված չէ)";
+  }
+  cardText.classList.add("answer");
+  hint.style.display = "none";
+  closeBtn.style.display = "inline-block";
+}
+
+function closeOverlay(){
+  overlay.classList.remove("show");
+  if (currentBtn){
+    currentBtn.disabled = true;
+  }
+  currentBtn = null;
+  currentItem = null;
+}
+
+overlay.addEventListener("click", (e) => {
+  if (!showingAnswer){
+    revealAnswer();
+  }
+});
+
+document.getElementById("cardVideo").addEventListener("click", (e) => {
+  e.stopPropagation();
+});
+
+document.getElementById("cardAudio").addEventListener("click", (e) => {
+  e.stopPropagation();
+});
+
+function setPhaseMode(activePhaseId) {
+  document.body.classList.toggle("phase1-mode", activePhaseId === "phase1Section");
+}
+
+function showPhase(sectionId) {
+  const phaseIds = ["phase1Section", "phase2Section", "phase4Section", "phase3Section"];
+  phaseIds.forEach((id) => {
+    document.getElementById(id).classList.toggle("visible", id === sectionId);
+  });
+  setPhaseMode(sectionId);
+  document.getElementById(sectionId).scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+document.getElementById("continueToPhase2").addEventListener("click", () => {
+  showPhase("phase2Section");
+});
+
+document.getElementById("continueToPhase3").addEventListener("click", () => {
+  showPhase("phase4Section");
+});
+
+document.getElementById("continueToPhase4").addEventListener("click", () => {
+  showPhase("phase3Section");
+});
+
+document.getElementById("backToPhase1").addEventListener("click", () => {
+  showPhase("phase1Section");
+});
+
+document.getElementById("backToPhase2").addEventListener("click", () => {
+  showPhase("phase2Section");
+});
+
+document.getElementById("backToPhase3").addEventListener("click", () => {
+  showPhase("phase4Section");
+});
+
+closeBtn.addEventListener("click", (e) => {
+  e.stopPropagation();
+  closeOverlay();
+});
+
+
+   //second phase
+const PHASE2_DATA = [
+  { topic: "Վիզուալ գրադարան",
+      questions: [
+      { question: "", answer: "Անտուան դը Սենտ Էքզյուպերի, «Փոքրիկ իշխանը»",image:"lib/littlePrince.jpg" },
+      { question: "", answer: "Ջոան Ռոուլինգ, «Հարրի Փոթթեր»",image:"lib/Potter.jpg"}, 
+      { question: "", answer: "Ջորջ Օրուելլ, « 1984»",image:"lib/1984.jpg" },
+      { question: "", answer: "Էռնեստ Հեմինգուեյ, «Ծերունին և ծովը»",image:"lib/Hemingway.jpg" }, 
+      { question: "", answer: "Նորա Իկստենա, «Մայրական կաթ»",image:"lib/Nora.jpg"}, 
+      { question: "", answer: "Ֆեոդոր Դոստոևսկի,«Ոճիր և Պատիժ»",image:"lib/punnishment.jpg" },
+      { question: "", answer: "Շառլոթ Բրոնտեի,«Ջեյն Էյր»",image:"lib/Bronte.jpg" }
+]
+  },
+  {topic: "Մշակութային խաչմերուկ", questions: [
+      { question: "Ո՞ր երկրում է կիսաշրջազգեստրը համարվում տաների ազգային հագուստ", answer: "Շոտլանդիա" }, 
+      { question: "Ո՞ր երկրի կամ մշակույթի պարն է ներկայացված տեսանյութում։", answer: "Հոպակ - Ուկրաինական պար", video: "dances/IMG_2581.MP4" },
+      { question: "Ո՞ր երկրի կամ մշակույթի պարն է ներկայացված տեսանյութում։", answer: "Սիրտակի - Հունական պար", video: "dances/IMG_2586.MP4" },
+      { question: "Ո՞ր երկրի կամ մշակույթի պարն է ներկայացված տեսանյութում։", answer: "Ֆլամենկո - Իսպանական պար", video: "dances/IMG_2587.MP4" },
+      { question: "Ո՞ր երկրի կամ մշակույթի պարն է ներկայացված տեսանյութում։", answer: "Մազուրկա - Լեհական պար", video: "dances/IMG_2588.MP4" },
+      { question: "Ո՞ր երկրի կամ մշակույթի պարն է ներկայացված տեսանյութում։", answer: "Բերդ - Հայկական պար", video: "dances/IMG_2589.MP4" },
+      { question: "Ո՞ր երկրի կամ մշակույթի պարն է ներկայացված տեսանյութում։", answer: "Կալինկա - Ռուսական պար", video: "dances/IMG_2590.MP4" }
+    ]
+  },
+  {topic: "Երգեր", questions: [
+      { question: "🕺💡🌃", answer: "The Weeknd-Blinding lights ",answerAudio:"music/TheWeekend.mp3"}, 
+      { question: "💃🤱1️⃣🔮🧑‍📝", answer: "Լիլիթ Հովհաննիսյան-Գնչու",answerAudio:"music/Lilitss.mp3"}, 
+      { question: "⭐🌃🔢", answer: "OneRepublic-Counting Stars ",answerAudio:"music/OneRepublic.mp3" },
+      { question: "🖌️🏠 🔴", answer: "Doja cat- paint the town red" },
+      { question: "⬆️♥️🛣️↗️", answer: "Հայկո-Վերև",answerAudio:"music/Hayko.mp3" }, 
+      { question: "❓🤵🏻", answer: "Raye-Where is my husband ",answerAudio:"music/Raye.mp3" },
+      { question: "🗣️ ❓ 👍 🕺 ➡️ 👩 ☀️ ✨", answer: "Mamba-Արևը շայն",answerAudio:"music/Mamba.mp3"}
+    ]
+  },
+  { topic: "Մատրիցա ար", questions: [
+      { question: "Պարագվայի և Բրազիլիայի սահմանով հոսող ո՞ր գետի վրա է կառուցված Իտայպուի հիդրոէլեկտրակայանը։", answer: "Պարանա գետ" }, 
+      { question: "Հին Հունաստանի ո՞ր գիտնականն է ձևակերպել լողացող մարմինների մասին հայտնի օրենքը, ըստ որի՝ հեղուկի մեջ ընկղմված մարմնի վրա ազդում է նրա դուրս մղած հեղուկի քաշին հավասար վերամբարձ ուժ։", answer: "Արքիմեդ" }, 
+      { question: "Ո՞ր ԱՄՆ նախագահի քաղաքական կարիերան սկսվեց Իլինոյսի նահանգային Սենատում։", answer: "Բարաք Օբամա" },
+      { question: "Որ պետությունը ունի պաշտոնապես երեք մայրաքաղաք՝ Պրետորիա, Քեյփթաուն և Բլումֆոնթեյն։", answer: "Հարավաֆրիկյան Հանրապետություն" }, 
+      { question: "Ինչպե՞ս է կոչվում ծրագրավորման ու թվային տեխնոլոգիաների մեջ լայնորեն կիրառվող այն թվային համակարգը, որի հիմքում օգտագործվում են ընդամենը երկու թվանշան՝ 0-ն և 1-ը։", answer: "Բինար" }, 
+      { question: "Ինչպե՞ս է կոչվում դատարանների միջոցով օրենքի հիման վրա վեճերի և իրավական գործերի քննության ու լուծման գործընթացը։", answer: "Արդարադատություն" },
+      { question: "1724 թվականին ո՞ր հայկական գյուղի բնակիչներն են կազմակերպել դիմադրություն Հայաստան ներխուժած օսմանյան բանակի դեմ՝ պաշտպանելով իրենց բնակավայրը։", answer: "Կարբի գյուղ" }
+    ]
+  },
+  { topic: "Անսովոր քարտեզներ", questions: 
+    [
+      { question: "Աշխարհի քարտեզի վրա կա միայն մեկ պաշտոնապես ճանաչված ինքնիշխան պետություն, որը չունի պաշտոնական մայրաքաղաք։ Ո՞ր կղզի-պետությունն է դա։", answer: "Նաուրու" }, 
+      { question: "1887 թվականին ստեղծված քարտեզում մի պետության տարածքային նկրտումները պատկերված են ոչ թե սահմաններով, այլ` կենդանու ձգվող «ձեռքով»։ Ո՞ր կենդանու մասին է խոսքը։", answer: "Ութոտնուկ" }, 
+      { question: "19-րդ դարում ստեղծված երգիծական քարտեզներում ո՞վ էր պատկերվում Իտալիայի «կոշիկը» հագցնելիս։", answer: "Ջուզեպպե Գարիբալդի" },
+      { question: "19-րդ դարի վերջին երգիծական  քարտեզներում Ճապոնիա կղզեխումբը պատկերվում էր որպես ձուկ որսացող ձկնորս։ Ո՞ր երկիրն էր պատկերված որպես «հսկա ձուկ», որը Ճապոնիան փորձում էր որսալ։", answer: "Կորեա" }, 
+      { question: "1870-ականների երգիծական քարտեզներում Ջոն Բուլ անունով մարդուկի կողքին պարանով կապված «անհանգիստ շունը» որ տարածքն էր պատկերում։", answer: "Իռլանդիա" }, 
+      { question: "1914 թվականին հրատարակված բրիտանական քարտեզում Մեծ Բրիտանիան պատկերված էր որպես շուն, Գերմանիան` արծիվ։ Իսկ ո՞ր կայսրությունն էր պատկերված սարդի կերպարով, որի սարդոստայնը քանդվում էր։", answer: "Ավստրո-Հունգարիա" },
+      { question: "1871 թվականի ֆրանսիական երգիծական քարտեզում Բիսմարկը պատկերված էր որպես ծերունի, որի բերանում պակասում էր 2 ատամ։ Ո՞ր երկու տարածքներն էին խորհրդանշում այդ ատամները։", answer: "Էլզաս և Լոթարինգիա" }
+    ]
+  }
+];
+
+const phase2Board = document.getElementById("phase2Board");
+const overlay2 = document.getElementById("overlay2");
+const phase2Tag = document.getElementById("phase2Tag");
+const phase2StageLabel = document.getElementById("phase2StageLabel");
+const phase2Img = document.getElementById("phase2Img");
+const phase2PlayBtn = document.getElementById("phase2PlayBtn");
+const phase2Audio = document.getElementById("phase2Audio");
+const phase2Text = document.getElementById("phase2Text");
+const phase2Hint = document.getElementById("phase2Hint");
+const phase2CloseBtn = document.getElementById("phase2CloseBtn");
+
+let p2Topic = null;
+let p2Btn = null;
+let p2Index = 0;
+let p2ShowingAnswer = false;
+
+PHASE2_DATA.forEach((topicData) => {
+  const btn = document.createElement("div");
+  btn.className = "phase2-btn";
+  btn.innerHTML = topicData.topic + '<span class="progress">0/' + topicData.questions.length + '</span>';
+  btn.addEventListener("click", () => openPhase2Topic(topicData, btn));
+  phase2Board.appendChild(btn);
+});
+
+function openPhase2Topic(topicData, btn){
+  p2Topic = topicData;
+  p2Btn = btn;
+  p2Index = 0;
+  showPhase2Question();
+  overlay2.classList.add("show");
+}
+
+function showPhase2Question(){
+  p2ShowingAnswer = false;
+  const item = p2Topic.questions[p2Index];
+  phase2Tag.textContent = p2Topic.topic + " · " + (p2Index + 1) + "/" + p2Topic.questions.length;
+  phase2StageLabel.textContent = "ՀԱՐՑ";
+  phase2Text.classList.remove("answer");
+  phase2Hint.style.display = "block";
+  phase2CloseBtn.style.display = "none";
+
+  const phase2Video = document.getElementById("phase2Video");
+  phase2Video.pause();
+  phase2Video.removeAttribute("src");
+  phase2Video.load();
+  phase2Audio.pause();
+  phase2Audio.style.display = "none";
+  phase2Audio.removeAttribute("src");
+  phase2Audio.load();
+  phase2PlayBtn.style.display = "none";
+  setQuestionImage(phase2Img, item.image);
+
+  if (item.video){
+    phase2Video.src = item.video;
+    phase2Video.style.display = "block";
+    boostMediaVolume(phase2Video);
+  } else {
+    phase2Video.style.display = "none";
+  }
+  phase2Text.style.display = "block";
+  phase2Text.textContent = item.question;
+}
+
+function revealPhase2Answer(){
+  p2ShowingAnswer = true;
+  const item = p2Topic.questions[p2Index];
+  const phase2Video = document.getElementById("phase2Video");
+  phase2Video.pause();
+  phase2Audio.pause();
+  phase2StageLabel.textContent = "ՊԱՏԱՍԽԱՆ";
+  if (item.answerAudio) {
+    phase2Audio.src = item.answerAudio;
+    phase2Audio.load();
+    phase2Audio.style.display = "block";
+    phase2PlayBtn.style.display = "block";
+    phase2PlayBtn.textContent = "▶ Նվագարկել";
+    phase2PlayBtn.setAttribute("aria-pressed", "false");
+  } else {
+    phase2Audio.style.display = "none";
+    phase2Audio.removeAttribute("src");
+    phase2Audio.load();
+    phase2PlayBtn.style.display = "none";
+  }
+  if (item.answerImage) {
+    setQuestionImage(phase2Img, item.answerImage);
+  }
+  phase2Text.style.display = "block";
+  phase2Text.textContent = item.answer;
+  phase2Text.classList.add("answer");
+  phase2Hint.style.display = "none";
+  const isLast = p2Index === p2Topic.questions.length - 1;
+  phase2CloseBtn.textContent = isLast ? "Փակել և վերադառնալ" : "Հաջորդ հարց";
+  phase2CloseBtn.style.display = "inline-block";
+}
+
+function advancePhase2(){
+  const btnProgress = p2Btn.querySelector(".progress");
+  btnProgress.textContent = (p2Index + 1) + "/" + p2Topic.questions.length;
+
+  if (p2Index < p2Topic.questions.length - 1){
+    p2Index++;
+    showPhase2Question();
+  } else {
+    p2Btn.classList.add("done");
+    overlay2.classList.remove("show");
+    p2Topic = null;
+    p2Btn = null;
+  }
+}
+
+overlay2.addEventListener("click", () => {
+  if (!p2ShowingAnswer){
+    revealPhase2Answer();
+  }
+});
+
+document.getElementById("phase2Video").addEventListener("click", (e) => {
+  e.stopPropagation();
+});
+
+phase2Audio.addEventListener("click", (e) => {
+  e.stopPropagation();
+});
+
+phase2PlayBtn.addEventListener("click", async (e) => {
+  e.stopPropagation();
+  try {
+    if (phase2Audio.paused) {
+      await phase2Audio.play();
+    } else {
+      phase2Audio.pause();
+    }
+  } catch (error) {
+    console.error("Unable to play Phase 2 answer audio.", error);
+    phase2PlayBtn.textContent = "Չհաջողվեց նվագարկել";
+  }
+});
+
+phase2Audio.addEventListener("play", () => {
+  phase2PlayBtn.textContent = "⏸ Դադարեցնել";
+  phase2PlayBtn.setAttribute("aria-pressed", "true");
+});
+
+phase2Audio.addEventListener("pause", () => {
+  phase2PlayBtn.textContent = "▶ Նվագարկել";
+  phase2PlayBtn.setAttribute("aria-pressed", "false");
+});
+
+phase2Audio.addEventListener("ended", () => {
+  phase2PlayBtn.textContent = "▶ Նվագարկել";
+  phase2PlayBtn.setAttribute("aria-pressed", "false");
+});
+
+phase2Audio.addEventListener("error", () => {
+  console.error("Phase 2 answer audio failed to load.", phase2Audio.error);
+  phase2PlayBtn.textContent = "Աուդիոն հասանելի չէ";
+});
+
+phase2CloseBtn.addEventListener("click", (e) => {
+  e.stopPropagation();
+  advancePhase2();
+});
+//third phase
+const PHASE4_DATA = [
+  { topic: "Մեջբերումներ", isHidden: false, questions: [
+
+      { question: "​Ես գիտեմ, որ * չգիտեմ:", answer: "​Ես գիտեմ, որ ոչինչ չգիտեմ" }, 
+      { question: `Լինել թե չլինել, այս է խնդիրը.
+      Ո՞րն է հոգեպես ավելի * `, answer: `Լինել թե չլինել, այս է խնդիրը.
+      Ո՞րն է հոգեպես ավելի ազնիվ ` }, 
+      { question: "Այս երկիրը բառերով սիրվող երկիր չէ, նաև * դիտվող երկիր չէ, քարի հետևում քար կա, մշուշի ետևում՝ մշուշ:", answer: "Այս երկիրը բառերով սիրվող երկիր չէ, նաև հեռադիտակով դիտվող երկիր չէ, քարի հետևում քար կա, մշուշի ետևում՝ մշուշ" },
+      { question: "Սակայն և կույր է այն *, որ չունի ոգու ներշնչում: ", answer: "Սակայն և կույր է այն մահը, որ չունի ոգու ներշնչում:" }, 
+      { question: " * այն լույսն է, որով կույրը կարող է տեսնել, և այն ձայնը, որով խուլը կարող է լսել։ ", answer: "Բարությունը այն լույսն է, որով կույրը կարող է տեսնել, և այն ձայնը, որով խուլը կարող է լսել։" }, 
+      { question: "Սիրտն ունի իր *, որոնց մասին բանականությունը ոչինչ չգիտի:", answer: "Սիրտն ունի իր պատճառները, որոնց մասին բանականությունը ոչինչ չգիտի" },
+      { question: "Եթե երկար նայես *, ապա * էլ կսկսի նայել քեզ:", answer: "Եթե երկար նայես անդունդին, ապա անդունդին էլ կսկսի նայել քեզ:" }
+    ]
+  },
+  {  topic: "Հին աշխարհի պատմություն", isHidden: false, questions: [
+      { question: "Ո՞ր հին ռազմական հնարքն էր նախատեսված այնպես, որ զինվորները թաքնված լինեին նվերի տեսքով ներկայացված հսկայական փայտե կառույցի ներսում։", answer: "Տրոյական ձի" }, 
+      { question: "Հին Հունաստանի ո՞ր քաղաք-պետությունում էր ձևավորվել այնպիսի քաղաքական համակարգ, որի քաղաքացիները որոշումների կայացմանը մասնակցում էին անմիջականորեն՝ ժողովների միջոցով։", answer: "Աթենք" }, 
+      { question: "Ո՞ր քաղաքակրթության մայրաքաղաքն էր Պերսեպոլիսը, որի ավերակների վրա մինչ այսօր պահպանվել են հսկայական պալատների և սյունաշարերի մնացորդներ։", answer: "Աքեմենյան Պարսկաստան" },
+      { question: "Ո՞ր հին քաղաքակրթության մշակույթին է պատկանում Անխի խաչաձև նշանը։", answer: "Հին Եգիպտոս" }, 
+      { question: "Ո՞ր հին քաղաքի կործանումն է կապված Վեզուվի ժայթքման հետ, որի հետևանքով քաղաքը թաղվեց հրաբխային մոխրի տակ։", answer: "Պոմպեյ" },
+      { question: "Ո՞ր առասպելում է արգելված անոթի բացվելուց հետո աշխարհում տարածվում հիվանդություններն ու դժբախտությունները, իսկ ներսում մնում միայն հույսը։", answer: "Պանդորայի արկղը" }, 
+      { question: "Հին Եգիպտոսի ո՞ր աստվածն էր Մեռյալների դատաստանի ժամանակ կշռում հանգուցյալի սիրտը Մաաթի փետուրի դիմաց։", answer: "Անուբիս" }
+    ]
+  },
+  { topic: "Համալսարաններ", isHidden: true, questions: [
+      { question: "Ո՞ր բուհի կազմից են պատմության ընթացքում առանձնացել և ինքնուրույն համալսարաններ դարձել Հայաստանի Ազգային Պոլիտեխնիկական, Բժշկական, Ագրարային և Տնտեսագիտական համալսարանները:", answer: "Երևանի պետական համալսարան" }, 
+      { question: "«Harry Potter»-ի ֆիլմերում Հոգվարթսի Մեծ դահլիճի տեսարանների համար ո՞ր անգլիական համալսարանի ճարտարապետությունն է օգտագործվել որպես տեսողական հիմք։", answer: "Օքսֆորդի համալսարանի" }, 
+      { question: "Ո՞րն է Եվրոպայի և ամբողջ աշխարհի ամենահին անընդմեջ գործող համալսարանը, որը հիմնադրվել է 1088 թվականին Իտալիայում:", answer: "Բոլոնիայի համալսարան" },
+      { question: "Ո՞ր համալսարանի գրադարանում է պահվում աշխարհում առաջին տպագիր գիրքը՝ Գուտենբերգի Աստվածաշունչը (կաշվե օրինակը), ինչպես նաև Վոյնիչի ձեռագիրը։", answer: "Յեյլի համալսարան" }, 
+      { question: "ԱՄՆ-ում ո՞ր երկու համալսարանների ամերիկյան ֆուտբոլի մրցակցությունն է հայտնի որպես The Game", answer: "Հարվարդ և Յել" }, 
+      { question: "Ո՞ր համալսարանում է գտնվում աշխարհի ամենահին գործող աստղադիտարաններից մեկը՝ Rundetaarn-ը (Կլոր աշտարակ), և որտեղ սովորել է նշանավոր ֆիզիկոս Նիլս Բորը:", answer: "Կոպենհագենի համալսարան" },
+      { question: "Ո՞ր համալսարանում է 1942 թվականին Էնրիկո Ֆերմիի գլխավորությամբ կառուցվել աշխարհում առաջին արհեստական միջուկային ռեակտորը՝ սկիզբ դնելով ատոմային դարաշրջանին:", answer: "Չիկագոյի համալսարան" }
+    ]
+  },
+  { topic: "ԽՄԻՉՔՆԵՐ", isHidden: true, questions: [
+      { question: "Ո՞րն էր Հոգվարթսի ուսանողների ու կախարդների ամենասիրելի փրփրուն խմիչքը։", answer: "Butterbeer" }, 
+      { question: "Ո՞րն է սպորտսմենների շրջանում ամենահայտնի էներգետիկ ըմպելիքի բրենդը։", answer: "Gatorade" }, 
+      { question: "Ո՞րն էր «Աստղային պատերազմներ» ֆիլմաշարում Լյուկ Սկայուոքերի ընտանիքի ու Տատուին մոլորակի բնակիչների սիրելի խմիչքը:", answer: "Կապույտ կաթ" },
+      { question: "Ի՞նչ էր «Սիմփսոններ» մուլտսերիալում Հոմերի հնարած կոկտեյլի անունը։", answer: "Ֆլեյմինգ Հոմեր" }, 
+      { question: "«Hotel California» երգում ո՞ր ալկոհոլային ըմպելիքը չկար հյուրանոցում արդեն 7-8 տարի։", answer: "Գինի" },
+      { question: "«Կազինո Ռոյալ» ֆիլմում ի՞նչ էր Ջեյմս Բոնդի հնարած կոկտեյլի անունը։", answer: "Վեսպեր" },
+      { question: " Էդգար Դեգայի կտավներից մեկում պատկերված են սրճարանում նստած երկու մարդիկ, որոնց առջև դրված է նույն ալկոհոլային խմիչքը։ Ի՞նչ խմիչք է պատկերված նկարում։", answer: "Աբսենթ" }
+    ]
+  },
+  { topic: "Կենդանիներ", isHidden: true, questions: [
+      { question: "Ո՞ր կենդանին է պատկերված «Metro-Goldwyn-Mayer» (MGM) կինոստուդիայի լոգոտիպի վրա։", answer: "Առյուծ" }, 
+      { question: "Մուլտֆիլմերից հայտնի այդ կենդանու անունը համընկնում է 2 տարի առաջ «Եվրատեսիլ» երգի մրցույթի հաղթողի բեմական անվան հետ։ Ո՞րն է այդ անունը։", answer: "Նեմո" }, 
+      { question: "Ո՞ւմ պատվին է կառուցվել Ջելամ քաղաքը։", answer: "Ալեքսանդր Մակեդոնացու ձիու` Բուցեֆալի (հնագույն անվանումը Բուկեֆալա անգ․ Bucephala)" },
+      { question: "Առաջին համաշխարհային պատերազմի մասնակից Ստաբի անունով շունը ի՞նչ զինվորական կոչում ուներ։", answer: "Սերժանտ" }, 
+      { question: "Պել անունով հայտնի դերասան-շան քանի՞ սերունդ է մարմնավորել Լեսսիին։", answer: "9 սերունդ" }, 
+      { question: "Ո՞ր հայտնի երգչուհու անունը ստացավ առաջին կլոնավորված կաթնասունը։", answer: "Դոլլի Փարթոնի" },
+      { question: "Ի՞նչ անուն ուներ տիեզերք թռած առաջին հոմինիդը։", answer: "Հեմ ( Ham)" }
+    ]
+  }
+];
+
+const phase4Board = document.getElementById("phase4Board");
+const overlay4 = document.getElementById("overlay4");
+const phase4Tag = document.getElementById("phase4Tag");
+const phase4StageLabel = document.getElementById("phase4StageLabel");
+const phase4Img = document.getElementById("phase4Img");
+const phase4Text = document.getElementById("phase4Text");
+const phase4Hint = document.getElementById("phase4Hint");
+const phase4CloseBtn = document.getElementById("phase4CloseBtn");
+
+let p4Topic = null;
+let p4Btn = null;
+let p4Index = 0;
+let p4ShowingTopic = false;
+let p4ShowingAnswer = false;
+
+PHASE4_DATA.forEach((topicData, i) => {
+  const btn = document.createElement("div");
+  btn.className = "phase2-btn";
+  if (topicData.isHidden) {
+    btn.innerHTML = "Թեմա " + (i + 1) + '<span class="progress">անհայտ</span>';
+  } else {
+    btn.innerHTML = topicData.topic + '<span class="progress">0/' + topicData.questions.length + '</span>';
+  }
+  btn.addEventListener("click", () => openPhase4Topic(topicData, btn));
+  phase4Board.appendChild(btn);
+});
+
+function openPhase4Topic(topicData, btn){
+  p4Topic = topicData;
+  p4Btn = btn;
+  p4Index = 0;
+  p4ShowingTopic = topicData.isHidden;
+  p4ShowingAnswer = false;
+
+  if (topicData.isHidden) {
+    btn.querySelector(".progress").textContent = topicData.topic + " · 1/" + topicData.questions.length;
+    showPhase4Topic();
+  } else {
+    showPhase4Question();
+  }
+  overlay4.classList.add("show");
+}
+
+function showPhase4Topic(){
+  phase4Tag.textContent = "ՓՈՒԼ 3";
+  phase4StageLabel.textContent = "ԹԵՄԱ";
+  setQuestionImage(phase4Img, "");
+  phase4Text.textContent = p4Topic.topic;
+  phase4Text.classList.remove("answer");
+  phase4Hint.textContent = "Սեղմեք էկրանին՝ հարցերը սկսելու համար";
+  phase4Hint.style.display = "block";
+  phase4CloseBtn.style.display = "none";
+}
+
+function showPhase4Question(){
+  p4ShowingTopic = false;
+  p4ShowingAnswer = false;
+  const item = p4Topic.questions[p4Index];
+  phase4Tag.textContent = p4Topic.topic + " · " + (p4Index + 1) + "/" + p4Topic.questions.length;
+  phase4StageLabel.textContent = "ՀԱՐՑ";
+  setQuestionImage(phase4Img, item.image);
+  phase4Text.textContent = item.question;
+  phase4Text.classList.remove("answer");
+  phase4Hint.textContent = "Սեղմեք էկրանին՝ պատասխանը տեսնելու համար";
+  phase4Hint.style.display = "block";
+  phase4CloseBtn.style.display = "none";
+}
+
+function revealPhase4Answer(){
+  p4ShowingAnswer = true;
+  const item = p4Topic.questions[p4Index];
+  phase4StageLabel.textContent = "ՊԱՏԱՍԽԱՆ";
+  if (item.answerImage) {
+    setQuestionImage(phase4Img, item.answerImage);
+  }
+  phase4Text.textContent = item.answer;
+  phase4Text.classList.add("answer");
+  phase4Hint.style.display = "none";
+  const isLast = p4Index === p4Topic.questions.length - 1;
+  phase4CloseBtn.textContent = isLast ? "Փակել և վերադառնալ" : "Հաջորդ հարց";
+  phase4CloseBtn.style.display = "inline-block";
+}
+
+function advancePhase4(){
+  if (p4Btn && p4Btn.querySelector(".progress")) {
+    const btnProgress = p4Btn.querySelector(".progress");
+    btnProgress.textContent = p4Topic.topic + " · " + (p4Index + 1) + "/" + p4Topic.questions.length;
+  }
+
+  if (p4Index < p4Topic.questions.length - 1){
+    p4Index++;
+    showPhase4Question();
+  } else {
+    p4Btn.classList.add("done");
+    overlay4.classList.remove("show");
+    p4Topic = null;
+    p4Btn = null;
+  }
+}
+
+overlay4.addEventListener("click", () => {
+  if (p4ShowingTopic) {
+    showPhase4Question();
+  } else if (!p4ShowingAnswer) {
+    revealPhase4Answer();
+  }
+});
+
+phase4CloseBtn.addEventListener("click", (e) => {
+  e.stopPropagation();
+  advancePhase4();
+});
+//4th phase
+const PHASE3_DATA = [
+  { topic: "Դիցաբանություն", questions: [
+      { question: "", answer: "" }, 
+      { question: "", answer: "" }, 
+      { question: "", answer: "" },
+      { question: "", answer: "" }, 
+      { question: "", answer: "" }, 
+      { question: "", answer: "" },
+      { question: "", answer: "" }
+    ]
+  },
+  { topic: "Արգելված գրականություն", questions: [
+      { question: " Ո՞ր գրքի հեղինակն է Ռեյ Բրեդբերին, որի սյուժեում գրքերը ոչնչացվում են, իսկ ընթերցանությունն արգելվում է։", answer: "«Ֆարենհայթ 451" }, 
+      { question: "Ո՞ր Վլադիﬕր Նաբոկովի վեպն էր արգելված կամ սահմանափակված ﬕ շարք երկրներում իր թեմատիկայի պատճառով:", answer: "Լոլիտա" }, 
+      { question: "Ինչպե՞ս է կոչվում այն գրական ստեղծագործության կամ գաղափարի նկատմամբ պաշտոնական վերահսկողության գործընթացը, որի նպատակն է սահմանափակել դրա տարածումը։", answer: "Գրաքննություն (ցենզուրա)" },
+      { question: "Ո՞ր գրքում են կենդանիները ապստամբում իրենց տերերի դեմ և ստեղծում սեփական հասարակությունը", answer: "Անասնաֆերմա" }, 
+      { question: "Ինչպե՞ս էր կոչվում ԽՍՀՄ-ում արգելված գրականության գաղտնի տարածման երևույթը։", answer: "Սաﬕզդատ" }, 
+       { question: "Անտուան դը Սենտ-Էկզյուպերիի «Փոքրիկ Իշխանը» ստեղծագործությունը Երկրորդ համաշխարհային պատերազﬕ տարիներին արգելված էր հեղինակի հայրենիքում՝ Ֆրանսիայում:Ո՞վ էր արգելել այս բարի հեքիաթը", answer: "Նացիստական Գերմանիա" },
+      { question: "Դանիել Դեֆոյի հայտնի «Ռոբինզոն Կրուզո» վեպը 1764 թվականին արգելվեց Իսպանիայում: Ո՞ր կրոնական կառույցն էր արգելել գիրքը:", answer: "Կաթոլիկ եկեղեցի" }
+     
+    ]
+  },
+  { topic: "Ֆոբիաներ", questions: [
+      { question: "Կինոյի աշխարհում հայտնի է «Տրիսկայդեկաֆոբիան» վախ 13 թվից: Սակայն գոյություն ունի դրա ավելի կոնկրետ տարբերակը՝ Պարասկևիդեկատրիաֆոբիան: Ի՞նչ կոնկրետ օրացույցային իրադարձությունից կամ օրվանից են վախենում այս ֆոբիայով տառապողները:", answer: "Ուրբաթ 13 ամսաթվից" }, 
+      { question: "Ինչից են վախենում նիտկոֆոբները", answer: "Մթությունից" }, 
+      { question: "Ֆոբոֆոբիան ունի շատ տարօրինակ և ինքնահղվող (սելֆ-ռեֆերենցիալ) բնույթ: Ի՞նչն էհանդիսանում ֆոբոֆոբիայի բուն առարկան:", answer: "Վախը հենց վախենալուց կամ ֆոբիա ունենալուց" },
+      { question: "Իսկ ի՞նչ կենդանիներից են սարսափում Օֆիդիոֆոբիա ունեցող մարդիկ:", answer: "Օձերից" },
+      { question: "Ո՞ր ֆոբիայով էր տառապում Ռոն Ուիզլին «Հարի Փոթթեր» ֆիլմաշարում։", answer: "Արախնոֆոբիա" }, 
+      { question: "Ո՞ր ֆոբիան կարող է ստիպել մարդուն խուսափել հրապարակային ելույթներից։", answer: "Գլոսոֆոբիա" }, 
+      { question: "Ֆոբոֆոբիան ունի շատ տարօրինակ և ինքնահղվող (սելֆ-ռեֆերենցիալ) բնույթ: Ի՞նչն էհանդիսանում ֆոբոֆոբիայի բուն առարկան:", answer: "Վախը հենց վախենալուց կամ ֆոբիա ունենալուց" },
+      { question: "Ո՞ր ֆոբիան է վախը ծաղրածուներից։", answer: "Կուլրոֆոբիա" }
+    ]
+  },
+  { topic: "Թղթախաղեր", questions: [
+      { question: " Քանի՞ խաղաթուղթ կա դասական կապուկում` առանց ջոկերների", answer: "52" },
+      { question: "Ո՞ր գրքում է թղթախաղի տախտակամածը կենդանանում ու դառնում բանակ։", answer: "Ալիսը հրաշքների աշխարհում" }, 
+      { question: "Ո՞ր քաղաքն է համարվում ժամանակակից պոկերի հայրենիքը։", answer: "Նոր Օռլեան" }, 
+      { question: "Դասական թղթախաղերի կապուկում պատկերված 4 թագավորներից 3-ը զինված են սրերով։ Ի՞նչ զենք է պահում չորրորդը։", answer: " Մարտական կացին" },
+      { question: " Ո՞ր գրքում է գլխավոր հերոսը խելագարվում` փորձելով բացահայտել 3 հաղթական խաղաթղթերի գաղտնիքը, որը նրան հայտնել էր կոմսուհու ուրվականը։", answer: "Պիկովայա դամա" }, 
+      { question: " Ո՞րն է աշխարհում ամենատարածված խաղը, որով գրասենյակային աշխատողները սպանում են իրենց ժամանակը։", answer: "Պասյանս" }, 
+      { question: " Ֆրանսիական ավանդական խաղաթղթերում յուրաքանչյուր թագավոր մարմնավորում է պատմական իրական տիրակալի։ Ո՞վ է պատկերված Սրտի Թագավորի վրա։", answer: " Կառլոս Մեծ" }
+      
+    ]
+  },
+  { topic: "Լեռներ", questions: [
+      { question: "Ո՞րն է Եվրոպայի ամենաբարձր գագաթը", answer: "Էլբրուս" }, 
+      { question: "Ո՞ր լեռն է հին հունական դիցաբանության մեջ համարվում աստվածների բնակավայրը։", answer: "Օլիմպոս" },
+      { question: "Ո՞ր երկրներում է գտնվում Էվերեստը։", answer: "Նեպալ և Չինաստան" }, 
+      { question: ".Ո՞րն է աշխարհի ամենաերկար լեռնաշղթան ցամաքում:", answer: "Անդերը" }, 
+      { question: "Լեռնագնացության մեջ ո՞ր գագաթն է համարվում «Կատաղի լեռ»", answer: "K2 (Չոգորի) լեռը" }, 
+      { question: "Իսկ ո՞րն է մոլորակի իրականում ամենաերկար լեռնաշղթան և որտե՞ղ է այն տեղակայված: ", answer: "Միջօվկիանոսային լեռնաշղթան" },
+      { question: "Ո՞ր լեռն է համարվում սրբազան 4 կրոնների համար (հինդուիզմ, բուդդիզմ, ջայնիզմ, բոն) և որի գագաթ բարձրանալն արգելված է օրենքով:", answer: "Կայլաս" }
+    ]
+  }
+];
+
+const phase3Board = document.getElementById("phase3Board");
+const overlay3 = document.getElementById("overlay3");
+const phase3Tag = document.getElementById("phase3Tag");
+const phase3StageLabel = document.getElementById("phase3StageLabel");
+const phase3Img = document.getElementById("phase3Img");
+const phase3Text = document.getElementById("phase3Text");
+const phase3Hint = document.getElementById("phase3Hint");
+const phase3CloseBtn = document.getElementById("phase3CloseBtn");
+
+let p3Topic = null;
+let p3Btn = null;
+let p3Index = 0;
+let p3ShowingTopic = false;
+let p3ShowingAnswer = false;
+
+PHASE3_DATA.forEach((topicData, i) => {
+  const btn = document.createElement("div");
+  btn.className = "phase2-btn";
+  btn.innerHTML = "Թեմա " + (i + 1) + '<span class="progress">անհայտ</span>';
+  btn.addEventListener("click", () => openPhase3Topic(topicData, btn));
+  phase3Board.appendChild(btn);
+});
+
+function openPhase3Topic(topicData, btn){
+  p3Topic = topicData;
+  p3Btn = btn;
+  p3Index = 0;
+  p3ShowingTopic = true;
+  p3ShowingAnswer = false;
+  btn.querySelector(".progress").textContent = topicData.topic + " · 1/" + topicData.questions.length;
+  showPhase3Topic();
+  overlay3.classList.add("show");
+}
+
+function showPhase3Topic(){
+  phase3Tag.textContent = "ՓՈՒԼ 4";
+  phase3StageLabel.textContent = "ԹԵՄԱ";
+  setQuestionImage(phase3Img, "");
+  phase3Text.textContent = p3Topic.topic;
+  phase3Text.classList.remove("answer");
+  phase3Hint.textContent = "Սեղմեք էկրանին՝ հարցերը սկսելու համար";
+  phase3Hint.style.display = "block";
+  phase3CloseBtn.style.display = "none";
+}
+
+function showPhase3Question(){
+  p3ShowingTopic = false;
+  p3ShowingAnswer = false;
+  const item = p3Topic.questions[p3Index];
+  phase3Tag.textContent = p3Topic.topic + " · " + (p3Index + 1) + "/" + p3Topic.questions.length;
+  phase3StageLabel.textContent = "ՀԱՐՑ";
+  setQuestionImage(phase3Img, item.image);
+  phase3Text.textContent = item.question;
+  phase3Text.classList.remove("answer");
+  phase3Hint.textContent = "Սեղմեք էկրանին՝ պատասխանը տեսնելու համար";
+  phase3Hint.style.display = "block";
+  phase3CloseBtn.style.display = "none";
+}
+
+function revealPhase3Answer(){
+  p3ShowingAnswer = true;
+  const item = p3Topic.questions[p3Index];
+  phase3StageLabel.textContent = "ՊԱՏԱՍԽԱՆ";
+  if (item.answerImage) {
+    setQuestionImage(phase3Img, item.answerImage);
+  }
+  phase3Text.textContent = item.answer;
+  phase3Text.classList.add("answer");
+  phase3Hint.style.display = "none";
+  const isLast = p3Index === p3Topic.questions.length - 1;
+  phase3CloseBtn.textContent = isLast ? "Փակել և վերադառնալ" : "Հաջորդ հարց";
+  phase3CloseBtn.style.display = "inline-block";
+}
+
+function advancePhase3(){
+  const btnProgress = p3Btn.querySelector(".progress");
+  btnProgress.textContent = p3Topic.topic + " · " + (p3Index + 1) + "/" + p3Topic.questions.length;
+
+  if (p3Index < p3Topic.questions.length - 1){
+    p3Index++;
+    showPhase3Question();
+  } else {
+    p3Btn.classList.add("done");
+    overlay3.classList.remove("show");
+    p3Topic = null;
+    p3Btn = null;
+  }
+}
+
+overlay3.addEventListener("click", () => {
+  if (p3ShowingTopic){
+    showPhase3Question();
+  } else if (!p3ShowingAnswer){
+    revealPhase3Answer();
+  }
+});
+
+phase3CloseBtn.addEventListener("click", (e) => {
+  e.stopPropagation();
+  advancePhase3();
+});
+</script>
+
+</body>
+</html>
