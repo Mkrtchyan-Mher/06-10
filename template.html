@@ -60,7 +60,7 @@
   #phase1Section .row {
     flex: 1 1 0;
     min-height: 0;
-    grid-template-columns: 180px repeat(7, minmax(0, 1fr));
+    grid-template-columns: 180px repeat(6, minmax(0, 1fr));
     gap: 6px;
   }
   #phase1Section .topic {
@@ -109,7 +109,7 @@
   }
   .row{
     display:grid;
-    grid-template-columns: 200px repeat(7, 1fr);
+    grid-template-columns: 200px repeat(6, 1fr);
     gap: 10px;
     align-items:stretch;
   }
@@ -356,7 +356,7 @@
   }
 
   @media (max-width: 720px){
-    .row{ grid-template-columns: 120px repeat(7, 1fr); }
+    .row{ grid-template-columns: 120px repeat(6, 1fr); }
     .topic{ font-size: 12px; padding: 0 8px; }
     .point-btn{ font-size: 15px; padding: 12px 0; }
   }
@@ -378,7 +378,7 @@
       gap: 3px;
     }
     #phase1Section .row {
-      grid-template-columns: 94px repeat(7, minmax(0, 1fr));
+      grid-template-columns: 94px repeat(6, minmax(0, 1fr));
       gap: 3px;
     }
     #phase1Section .topic {
@@ -640,13 +640,14 @@ const GAME_DATA = RAW_GAME_DATA;
 
 const GAME_TITLE = "Գիտելիքների Մենամարտ";
 
-const POINT_VALUES = [100, 200, 300, 400, 500, 600, 700];
+const SOURCE_POINT_VALUES = [100, 200, 300, 400, 500, 600, 700];
+const POINT_VALUES = [100, 200, 300, 400, 500, 600];
 
 function reorderQuestionSlots(topicName, sourcePointOrder) {
   const topicData = RAW_GAME_DATA.find((topic) => topic.topic === topicName);
   const originalQuestions = topicData.questions;
   topicData.questions = Object.fromEntries(
-    POINT_VALUES.map((targetPoints, index) => [targetPoints, originalQuestions[sourcePointOrder[index]]])
+    SOURCE_POINT_VALUES.map((targetPoints, index) => [targetPoints, originalQuestions[sourcePointOrder[index]]])
   );
 }
 
@@ -656,6 +657,28 @@ reorderQuestionSlots("Մուլտֆիլմեր", [100, 300, 500, 200, 400, 600, 70
 reorderQuestionSlots("Գինեսի Ռեկորդներ", [200, 100, 400, 300, 500, 600, 700]);
 reorderQuestionSlots("Լոգոներ", [100, 200, 500, 600, 400, 300, 700]);
 reorderQuestionSlots("Ֆորմուլա/ավտոմեքենաներ", [100, 200, 300, 400, 500, 600, 700]);
+
+const REMOVED_QUESTION_POINTS = {
+  "Ծեսեր": 600,
+  "Խոհանոցներ": 500,
+  "Գինեսի Ռեկորդներ": 500,
+  "Օպերաների շենքեր": 600,
+  " Տարեթվեր": 400,
+  "Տիեզերք": 700,
+  "Լոգոներ": 300,
+  "Ֆորմուլա/ավտոմեքենաներ": 600
+};
+
+RAW_GAME_DATA.forEach((topicData) => {
+  const removedPoint = REMOVED_QUESTION_POINTS[topicData.topic] || 700;
+  delete topicData.questions[removedPoint];
+
+  const remainingQuestions = Object.entries(topicData.questions)
+    .sort(([leftPoint], [rightPoint]) => Number(leftPoint) - Number(rightPoint));
+  topicData.questions = Object.fromEntries(
+    POINT_VALUES.map((points, index) => [points, remainingQuestions[index][1]])
+  );
+});
 
 document.getElementById("gameTitle").textContent = GAME_TITLE;
 setPhaseMode("phase1Section");
